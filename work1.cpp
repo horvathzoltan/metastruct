@@ -171,7 +171,9 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 }
 
 
-/**/
+/*
+ * https://en.cppreference.com/w/c/language/struct
+*/
 Work1::Struct Work1::Struct::Parse(const QString& name, const QString& block)
 {
     Struct a;
