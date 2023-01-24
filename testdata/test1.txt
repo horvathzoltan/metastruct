@@ -7,6 +7,10 @@
 
 namespace Model
 {
+    QString a = "aaaa struct bbb"
+    struct ccc; {grrrvavva}
+    struct bbb ; {uu}
+    struct aaa { valami {} {}  {}  u};
     struct Device{
         QString address = "abc";
         bool connected = false;

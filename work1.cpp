@@ -39,7 +39,7 @@ auto Work1::doWork(Params params) -> Result
     int L = txt.length();
 
     while(ix<L){
-        //auto& c = txt[ix];
+
         int ix2 = SkipQuotation(txt, ix);
         if(ix!=ix2) {ix = ix2;continue;}
 
@@ -49,8 +49,19 @@ auto Work1::doWork(Params params) -> Result
         // U" "
         // R" ( ) "
 
-        ix2 = FindStruct(txt, ix);
-        Struct s = Struct::Parse(txt);
+        //
+
+        auto& c = txt[ix];
+        if(c=='s')
+        {
+            FindStructR r = FindStruct(txt, ix);
+            if(ix!=r.ix)
+            {
+                ix=r.ix;
+                Struct s = Struct::Parse(r.name, r.block);
+            }
+        }
+        //Struct s = Struct::Parse(txt);
         ix++;
     }
 
@@ -68,19 +79,106 @@ int Work1::SkipQuotation(const QString &txt, int ix)
     return i+1;
 }
 
-
-// struct aaa { valami {}{}{}  };
-int Work1::FindStruct(const QString &txt, int ix)
+Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 {
-    int i = txt.indexOf("struct", ix+1);
-    if(i==-1) return ix;
+    auto ok = txt.mid(ix2,6)==("struct");
+    FindStructR r(ix2);
+    if(!ok) return r;
+    int L = txt.length();
+    StructFindStates i = StructBegins;
+    int level=0;
 
-    return i+1;
+    while(r.ix<L)
+    {
+        auto& c = txt[r.ix];
+        if(c.isSpace())
+        {
+            switch(i)
+            {
+            case StructBegins: i=NameBegins; break;//name következik
+            case NameBegins: i=NameEnds; break;//name kész, blokk következik
+            case BlockBegins: r.block+=c;break;// blokk belsejében szóköz
+            default: break;
+            }
+        }
+        else
+        {
+            switch(i)
+            {
+            case NameBegins:
+            {
+                if(c==';')
+                {
+                    i=BlockEnds; //nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    i=BlockBegins; // a név blokkal végződik
+                    level++;
+                }
+                else
+                {
+                    r.name+=c; //name++
+                }
+                break;
+            }
+            case NameEnds: // blokk következik;
+            {
+                if(c==';')
+                {
+                    if(level==0) i=BlockEnds; //nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    level++;
+                    i=BlockBegins;
+                }                
+                break;
+            }
+            case BlockBegins:
+            {
+                if(c=='{')
+                {
+                    level++;
+                }
+                else if(c=='}')
+                {
+                    level--; // blokk vége
+                }
+
+                if(level>0)
+                {
+                    r.block+=c; // blokk belsejében nem szóköz
+                }
+                else
+                {
+                    i=BlockEnds; // blokk vége megvan;
+                }
+
+                break;            
+            }
+            default: break;
+            }
+            if(i==BlockEnds) break; // megvan a vége, nem keresünk tovább
+        }
+        r.ix++;
+    }
+    //124, 29
+    //int L2 = ix-ix2+1;
+    //zInfo("s:"+txt.mid(ix2, L2));
+    //zInfo("s:"+r.name+":"+r.block);
+    return r;
 }
 
 
-Work1::Struct Work1::Struct::Parse(const QString &txt)
+Work1::Struct Work1::Struct::Parse(const QString& name, const QString& block)
 {
     Struct a;
+    zInfo("parse:"+name+":"+block);
     return a;
+}
+
+Work1::FindStructR::FindStructR(int _ix)
+{
+    ix = _ix;
 }

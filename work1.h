@@ -24,16 +24,29 @@ public:
         QString ToString();
     };
 
+    enum StructFindStates:int {StructBegins=0,
+                               NameBegins=1,
+                               NameEnds=2,
+                               BlockBegins=3,
+                               BlockEnds=4};
+
     Result doWork(Params params);
 
     static int SkipQuotation(const QString& txt, int ix);
 
-    static int FindStruct(const QString& txt, int ix);
+    struct FindStructR{
+        FindStructR(int _ix);
+        int ix;
+        QString name;
+        QString block;
+    };
+
+    static FindStructR FindStruct(const QString& txt, int ix);
 
     struct Struct{
         QString name;
 
-        static Struct Parse(const QString& txt);
+        static Struct Parse(const QString& name, const QString& block);
     };
 
 };
