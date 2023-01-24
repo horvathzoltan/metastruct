@@ -25,6 +25,17 @@ public:
     };
 
     Result doWork(Params params);
+
+    static int SkipQuotation(const QString& txt, int ix);
+
+    static int FindStruct(const QString& txt, int ix);
+
+    struct Struct{
+        QString name;
+
+        static Struct Parse(const QString& txt);
+    };
+
 };
 
 #endif // WORK1_H

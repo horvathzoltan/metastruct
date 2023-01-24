@@ -9,6 +9,8 @@ CONFIG -= app_bundle
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += SOURCE_PATH=$$PWD
+DEFINES += TARGI=$$TARGET
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -94,6 +96,8 @@ message( "hmmmm "$$HOME/$$COMMON_LIBS)
 SOURCES += \
         commandlineparserhelper.cpp \
         coreappworker.cpp \
+        helpers/filehelper.cpp \
+        helpers/filenamehelper.cpp \
         logger.cpp \
         main.cpp \
         signalhelper.cpp \
@@ -102,9 +106,12 @@ SOURCES += \
 HEADERS += \
     commandlineparserhelper.h \
     coreappworker.h \
+    helpers/filehelper.h \
+    helpers/filenamehelper.h \
     logger.h \
     nameof.h \
     signalhelper.h \
+    testdata/test1.txt \
     work1.h
 
 message(includepath = $$INCLUDEPATH)
