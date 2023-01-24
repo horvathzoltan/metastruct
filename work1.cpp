@@ -171,10 +171,17 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 }
 
 
+/**/
 Work1::Struct Work1::Struct::Parse(const QString& name, const QString& block)
 {
     Struct a;
-    zInfo("parse:"+name+":"+block);
+    bool ok=true;
+    if(name.isEmpty()) ok=false;
+    if(block.isEmpty()) ok=false;
+    if(ok)
+    {
+        zInfo("parse:"+name+":"+block);
+    }
     return a;
 }
 
