@@ -174,20 +174,106 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 /*
  * https://en.cppreference.com/w/c/language/struct
 */
-Work1::Struct Work1::Struct::Parse(const QString& name, const QString& block)
-{
+Work1::Struct Work1::Struct::Parse(const QString& name, const QString& txt)
+{    
     Struct a;
+    FindFieldR r(ix);
     bool ok=true;
     if(name.isEmpty()) ok=false;
-    if(block.isEmpty()) ok=false;
+    if(txt.isEmpty()) ok=false;
+    int L = txt.length();
+    StructFindStates i = NameBegins;
+    int level=0;
+
     if(ok)
     {
-        zInfo("parse:"+name+":"+block);
+        zInfo("parse:"+name+":"+txt);
+
+        while(r.ix<L)
+        {
+            auto& c = txt[r.ix];
+            if(c.isSpace())
+            {
+                switch(i)
+                {
+                case StructBegins: i=NameBegins; break;//name következik
+                case NameBegins: i=NameEnds; break;//name kész, blokk következik
+                case BlockBegins: r.block+=c;break;// blokk belsejében szóköz
+                default: break;
+                }
+            }
+            else
+            {
+                switch(i)
+                {
+                case NameBegins:
+                {
+                    if(c==';')
+                    {
+                        i=BlockEnds; //nincs blokk;
+                    }
+                    else if(c=='{')
+                    {
+                        i=BlockBegins; // a név blokkal végződik
+                        level++;
+                    }
+                    else
+                    {
+                        r.name+=c; //name++
+                    }
+                    break;
+                }
+                case NameEnds: // blokk következik;
+                {
+                    if(c==';')
+                    {
+                        if(level==0) i=BlockEnds; //nincs blokk;
+                    }
+                    else if(c=='{')
+                    {
+                        level++;
+                        i=BlockBegins;
+                    }
+                    break;
+                }
+                case BlockBegins:
+                {
+                    if(c=='{')
+                    {
+                        level++;
+                    }
+                    else if(c=='}')
+                    {
+                        level--; // blokk vége
+                    }
+
+                    if(level>0)
+                    {
+                        r.block+=c; // blokk belsejében nem szóköz
+                    }
+                    else
+                    {
+                        i=BlockEnds; // blokk vége megvan;
+                    }
+
+                    break;
+                }
+                default: break;
+                }
+                if(i==BlockEnds) break; // megvan a vége, nem keresünk tovább
+            }
+            r.ix++;
+        }
     }
     return a;
 }
 
 Work1::FindStructR::FindStructR(int _ix)
+{
+    ix = _ix;
+}
+
+Work1::FindFieldR::FindFieldR(int _ix)
 {
     ix = _ix;
 }

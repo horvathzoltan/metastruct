@@ -41,10 +41,22 @@ public:
         QString block;
     };
 
+    struct FindFieldR{
+        FindFieldR(int _ix);
+        int ix;
+        QString type;
+        QString name;
+    };
+
     static FindStructR FindStruct(const QString& txt, int ix);
 
     struct Struct{
         QString name;
+
+        struct Field{
+            QString type;
+            QString name;
+        };
 
         static Struct Parse(const QString& name, const QString& block);
     };
