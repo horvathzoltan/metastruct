@@ -189,79 +189,29 @@ Work1::Struct Work1::Struct::Parse(const QString& name, const QString& txt)
     {
         zInfo("parse:"+name+":"+txt);
 
-        while(r.ix<L)
-        {
+        while(r.ix<L){
+
+            int ix2 = SkipQuotation(txt, r.ix);
+            if(r.ix!=ix2) {r.ix = ix2;continue;}
+
+            // L" "
+            // u8" "
+            // u" "
+            // U" "
+            // R" ( ) "
+
+            //
+
             auto& c = txt[r.ix];
-            if(c.isSpace())
-            {
-                switch(i)
-                {
-                case StructBegins: i=NameBegins; break;//name következik
-                case NameBegins: i=NameEnds; break;//name kész, blokk következik
-                case BlockBegins: r.block+=c;break;// blokk belsejében szóköz
-                default: break;
-                }
-            }
-            else
-            {
-                switch(i)
-                {
-                case NameBegins:
-                {
-                    if(c==';')
-                    {
-                        i=BlockEnds; //nincs blokk;
-                    }
-                    else if(c=='{')
-                    {
-                        i=BlockBegins; // a név blokkal végződik
-                        level++;
-                    }
-                    else
-                    {
-                        r.name+=c; //name++
-                    }
-                    break;
-                }
-                case NameEnds: // blokk következik;
-                {
-                    if(c==';')
-                    {
-                        if(level==0) i=BlockEnds; //nincs blokk;
-                    }
-                    else if(c=='{')
-                    {
-                        level++;
-                        i=BlockBegins;
-                    }
-                    break;
-                }
-                case BlockBegins:
-                {
-                    if(c=='{')
-                    {
-                        level++;
-                    }
-                    else if(c=='}')
-                    {
-                        level--; // blokk vége
-                    }
 
-                    if(level>0)
-                    {
-                        r.block+=c; // blokk belsejében nem szóköz
-                    }
-                    else
-                    {
-                        i=BlockEnds; // blokk vége megvan;
-                    }
+                FindFieldR f = FindField(txt, r.ix);
+                if(r.ix!=f.ix)
+                {
+                    r.ix=f.ix;
+                    Struct::Field s = Struct::Field::Parse(f.name, f.type);
+                }
 
-                    break;
-                }
-                default: break;
-                }
-                if(i==BlockEnds) break; // megvan a vége, nem keresünk tovább
-            }
+            //Struct s = Struct::Parse(txt);
             r.ix++;
         }
     }
