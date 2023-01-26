@@ -11,11 +11,11 @@ namespace Model
     struct ccc; {grrrvavva}
     struct bbb ; {uu}
     struct aaa { valami {} {}  {}  u};
-    struct Device{
-        QString address = "abc";
+    struct Device{  
+        QString address = "a,bc", v2 = {"aaa"};
         bool connected = false;
         QString name = "def";
-        QString abcg("hutty");
+        QString abcg("hutty"), u="sss";
         QString name="a", b="u";
         int i,j,k = 88;
         QString toString() const;

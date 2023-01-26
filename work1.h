@@ -25,14 +25,25 @@ public:
     };
 
     enum StructFindStates:int {StructStarted=0,
-                               NameStarted=1,
-                               NameEnded=2,
-                               BlockStarted=3,
-                               BlockEnded=4};
+                               NameStarted,
+                               NameEnded,
+                               BlockStarted,
+                               BlockEnded};
+
+    enum FieldFindStates:int {FieldStarted=0,
+                               FTypeStarted,
+                               FTypeEnded,
+                               FNameStarted,
+                               FNameEnded,
+                               FValueStarted,
+                               FValueEnded,
+                               FieldEnded,
+                             FieldError};
 
     Result doWork(Params params);
 
     static int SkipQuotation(const QString& txt, int ix);
+    static int SkipBlock(const QString& txt, int ix);
 
 
 
@@ -44,17 +55,30 @@ public:
 //    };
 
 
+    struct T1{
+        //int;
+        QString z1{"aa"};
+        QString z2 = {"aa"};
+        QString z3;
+        int a, a2;
+        qreal b, t;
+        void rrr(int u);
+    };
+
     struct Field{
-        QString name;
         QString type;
+        QString name;
         QString value;
 
-        static Field Parse(const QString& line);
+        static QList<Field> Parse(const QString& line);
+        QString ToString();
     };
 
     struct Struct{
         QString name;
         QList<Field> fields;
+
+        QString ToString();
     };
 
     struct FindStructR{

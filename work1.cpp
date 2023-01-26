@@ -39,17 +39,8 @@ auto Work1::doWork(Params params) -> Result
     int L = txt.length();
 
     while(ix<L){
-
         int ix2 = SkipQuotation(txt, ix);
-        if(ix!=ix2) {ix = ix2;continue;}
-
-        // L" "
-        // u8" "
-        // u" "
-        // U" "
-        // R" ( ) "
-
-        //
+        if(ix!=ix2) {ix = ix2;continue;}      
 
         auto& c = txt[ix];
         if(c=='s')
@@ -58,15 +49,21 @@ auto Work1::doWork(Params params) -> Result
             if(ix!=r.ix)
             {
                 ix=r.ix;
-                //Struct s = Struct::Parse(r.name, r.block);
+                QString a = r._struct.ToString();
+                zInfo(a);
             }
         }
-        //Struct s = Struct::Parse(txt);
         ix++;
     }
 
     return {Result::State::Ok, 55};
 }
+
+// L" "
+// u8" "
+// u" "
+// U" "
+// R" ( ) "
 
 int Work1::SkipQuotation(const QString &txt, int ix)
 {
@@ -74,9 +71,43 @@ int Work1::SkipQuotation(const QString &txt, int ix)
     if(c!='\"') return ix;
     int i = txt.indexOf('"', ix+1);
     if(i==-1) return ix;
-    int L = i-ix+1;
-    zInfo(L("q:")+txt.mid(ix, L));
-    return i+1;
+    //int L = i-ix+1;
+    //zInfo(L("q:")+txt.mid(ix, L));
+    return i+1;// a találat mögötti, mivel átugrottuk
+}
+
+int Work1::SkipBlock(const QString &txt, int ix2)
+{
+    int L = txt.length();
+    int ix=ix2;
+    int l=0;
+    while(ix<L)
+    {
+        auto& c = txt[ix];
+        if(c=='{') // ha nem idézőjelben van!
+        {
+            l++;
+        }
+        else if(c=='}')
+        {
+            l--;
+            if(l==0) break;
+        }
+        else if(c=='\"')
+        {
+            int ix2 = SkipQuotation(txt, ix);
+            if(ix!=ix2)
+            {
+                QString v = txt.mid(ix, ix2-ix);
+                ix=ix2;
+                continue;
+            }
+        }
+        ix++;
+    }
+    //int L = ix-ix2+1;
+    //zInfo(L("b:")+txt.mid(ix2, L2));
+    return ix+1; // a találat mögötti, mivel átugrottuk
 }
 
 Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
@@ -93,8 +124,8 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
     while(r.ix<L)
     {
         auto& c = txt[r.ix];
-        int ix2 = SkipQuotation(txt, r.ix);
-        if(r.ix!=ix2) {r.ix = ix2;continue;}
+        //int ix2 = SkipQuotation(txt, r.ix);
+        //if(r.ix!=ix2) {r.ix = ix2;continue;}
         if(c.isSpace())
         {
             switch(i)
@@ -155,7 +186,7 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
                     line+=c; // blokk belsejében nem szóköz
                     if(c==';') // megvan egy sor, ki kell értékelni
                     {
-                        Field f = Field::Parse(line);
+                        QList<Field> f = Field::Parse(line);
                         r._struct.fields.append(f);
                         line.clear();
                     }
@@ -176,16 +207,165 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
     //124, 29
     //int L2 = ix-ix2+1;
     //zInfo("s:"+txt.mid(ix2, L2));
-    //zInfo("s:"+r.name+":"+r.block);
+    //zInfo("s:"+r._struct.ToString());
     return r;
 }
 
-Work1::Field Work1::Field::Parse(const QString &line)
+QList<Work1::Field> Work1::Field::Parse(const QString &line)
 {
+    QList<Field> fields;
+    //f.name=line.trimmed();
+    //zInfo("l:"+line);
+    int L = line.length();
+    int ix = 0;
+    FieldFindStates i = FieldStarted;
+
     Field f;
-    f.name=line.trimmed();
-    zInfo("f:"+line);
-    return f;
+    while(ix<L)
+    {
+        auto&c = line[ix];        
+        if(c.isSpace())
+        {
+            switch(i)
+            {
+            case FTypeStarted: i=FTypeEnded; break;// type kész
+            case FNameStarted: i=FNameEnded; break;// name kész
+            //case FValueStarted: i=FValueEnded; break;// name kész
+            default: break;
+            }
+        }
+        else
+        {
+            if(c==';')
+            {
+                if(i!=FieldError)
+                    fields.append(f);
+                f.name.clear();
+                f.value.clear();
+                i=FieldEnded; //nincs field;
+            }
+            if(c==',')
+            {
+                if(i!=FieldError)
+                    fields.append(f);
+                f.name.clear();
+                f.value.clear();
+                i=FTypeEnded; //új érték lesz field;
+            }
+            else
+            {
+                switch(i)
+                {
+                case FieldStarted: // type kezdőbetű
+                {
+                    if(c.isLetter())
+                    {
+                        i = FTypeStarted;
+                        f.type+=c; //type++
+                    }
+                    else
+                    {
+                        i=FieldEnded; //nincs field;
+                    }
+                    break;
+                }
+                case FTypeStarted:
+                {
+                    f.type+=c; //type++
+                    break;
+                }
+                case FTypeEnded: // name kezdőbetű
+                {
+                    if(c.isLetter())
+                    {
+                        i = FNameStarted;
+                        f.name+=c; //type++
+                    }
+                    break;
+                }
+                case FNameStarted: // name továbbiak
+                {                    
+                    if(c=='='){
+                        i = FValueStarted;
+                    }
+                    else if(c=='(')
+                    {
+                        i=FieldError;
+                    }
+                    else
+                    {
+                        f.name+=c; //type++
+                    }
+                    break;
+                }
+
+                case FNameEnded: // name kezdőbetű
+                {
+                    i = FValueStarted;
+                    if(c!='=')
+                    {
+                        f.value+=c; //type++
+                    }
+
+                    break;
+                }
+                case FValueStarted:
+                {
+                    if(c=='\"')
+                    {
+                        int ix2 = SkipQuotation(line, ix);
+                        if(ix!=ix2){
+                            QString v = line.mid(ix, ix2-ix);
+                            f.value += v;
+                            ix=ix2;
+                            continue;
+                        }
+                    }
+                    else if(c=='{')
+                    {
+                        int ix2 = SkipBlock(line, ix);
+                        if(ix!=ix2){
+                            QString v = line.mid(ix, ix2-ix);
+                            f.value += v;
+                            ix=ix2;
+                            continue;
+                        }
+                    }
+                    // nem lehet benne zárójel
+                    // kommentet is át kell ugrani
+                    else
+                    {
+                        if(c!='=')
+                        {
+                            f.value+=c;
+                        }
+                    }
+                    break;
+                }
+                default: break;
+                }
+            }
+            //if(i==FieldEnded) break; // megvan a vége, nem keresünk tovább
+//            if(i==FieldError) // megvan a vége, nem keresünk tovább
+//            {
+//                f.name.clear();
+//                f.value.clear();
+//            }
+        }
+        ix++;
+    }
+//    for(auto&r:fields)
+//    {
+//        zInfo("f:"+r.type+":"+r.name+"="+r.value);
+//    }
+    return fields;
+}
+
+QString Work1::Field::ToString()
+{
+    QString s = "f:"+type+":"+name;
+    if(!value.isEmpty()) s+= "="+value;
+    return s;
 }
 
 /*
@@ -246,3 +426,17 @@ Work1::FindStructR::FindStructR(int _ix)
 //}
 
 
+
+QString Work1::Struct::ToString()
+{
+    QString s = "s:"+name;
+    if(fields.isEmpty()) return s;
+
+    QString fs;
+    for(auto&f:fields)
+    {
+        if(!fs.isEmpty())fs+='\n';
+        fs+=f.ToString();
+    }
+    return s+"{\n"+fs+"}\n";
+}
