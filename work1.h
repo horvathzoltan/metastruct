@@ -24,43 +24,46 @@ public:
         QString ToString();
     };
 
-    enum StructFindStates:int {StructBegins=0,
-                               NameBegins=1,
-                               NameEnds=2,
-                               BlockBegins=3,
-                               BlockEnds=4};
+    enum StructFindStates:int {StructStarted=0,
+                               NameStarted=1,
+                               NameEnded=2,
+                               BlockStarted=3,
+                               BlockEnded=4};
 
     Result doWork(Params params);
 
     static int SkipQuotation(const QString& txt, int ix);
 
-    struct FindStructR{
-        FindStructR(int _ix);
-        int ix;
-        QString name;
-        QString block;
-    };
 
-    struct FindFieldR{
-        FindFieldR(int _ix);
-        int ix;
+
+//    struct FindFieldR{
+//        FindFieldR(int _ix);
+//        int ix;
+//        QString type;
+//        QString name;
+//    };
+
+
+    struct Field{
+        QString name;
         QString type;
-        QString name;
-    };
+        QString value;
 
-    static FindStructR FindStruct(const QString& txt, int ix);
+        static Field Parse(const QString& line);
+    };
 
     struct Struct{
         QString name;
-
-        struct Field{
-            QString type;
-            QString name;
-        };
-
-        static Struct Parse(const QString& name, const QString& block);
+        QList<Field> fields;
     };
 
+    struct FindStructR{
+        FindStructR(int _ix);
+        int ix;
+        Struct _struct;
+    };
+
+    static FindStructR FindStruct(const QString& txt, int ix);
 };
 
 #endif // WORK1_H

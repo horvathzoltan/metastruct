@@ -15,7 +15,9 @@ namespace Model
         QString address = "abc";
         bool connected = false;
         QString name = "def";
-
+        QString abcg("hutty");
+        QString name="a", b="u";
+        int i,j,k = 88;
         QString toString() const;
     };
 

@@ -58,7 +58,7 @@ auto Work1::doWork(Params params) -> Result
             if(ix!=r.ix)
             {
                 ix=r.ix;
-                Struct s = Struct::Parse(r.name, r.block);
+                //Struct s = Struct::Parse(r.name, r.block);
             }
         }
         //Struct s = Struct::Parse(txt);
@@ -83,21 +83,25 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 {
     auto ok = txt.mid(ix2,6)==("struct");
     FindStructR r(ix2);
+
     if(!ok) return r;
     int L = txt.length();
-    StructFindStates i = StructBegins;
+    StructFindStates i = StructStarted;
     int level=0;
+    QString line;
 
     while(r.ix<L)
     {
         auto& c = txt[r.ix];
+        int ix2 = SkipQuotation(txt, r.ix);
+        if(r.ix!=ix2) {r.ix = ix2;continue;}
         if(c.isSpace())
         {
             switch(i)
             {
-            case StructBegins: i=NameBegins; break;//name következik
-            case NameBegins: i=NameEnds; break;//name kész, blokk következik
-            case BlockBegins: r.block+=c;break;// blokk belsejében szóköz
+            case StructStarted: i=NameStarted; break;//name következik
+            case NameStarted: i=NameEnded; break;//name kész, blokk következik
+            case BlockStarted: line+=c;break;// blokk belsejében szóköz
             default: break;
             }
         }
@@ -105,37 +109,37 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
         {
             switch(i)
             {
-            case NameBegins:
+            case NameStarted:
             {
                 if(c==';')
                 {
-                    i=BlockEnds; //nincs blokk;
+                    i=BlockEnded; //nincs blokk;
                 }
                 else if(c=='{')
                 {
-                    i=BlockBegins; // a név blokkal végződik
+                    i=BlockStarted; // a név blokkal végződik
                     level++;
                 }
                 else
                 {
-                    r.name+=c; //name++
+                    r._struct.name+=c; //name++
                 }
                 break;
             }
-            case NameEnds: // blokk következik;
+            case NameEnded: // blokk következik;
             {
                 if(c==';')
                 {
-                    if(level==0) i=BlockEnds; //nincs blokk;
+                    if(level==0) i=BlockEnded; //lezárva és nincs blokk;
                 }
                 else if(c=='{')
                 {
                     level++;
-                    i=BlockBegins;
+                    i=BlockStarted;
                 }                
                 break;
             }
-            case BlockBegins:
+            case BlockStarted:
             {
                 if(c=='{')
                 {
@@ -148,18 +152,24 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 
                 if(level>0)
                 {
-                    r.block+=c; // blokk belsejében nem szóköz
+                    line+=c; // blokk belsejében nem szóköz
+                    if(c==';') // megvan egy sor, ki kell értékelni
+                    {
+                        Field f = Field::Parse(line);
+                        r._struct.fields.append(f);
+                        line.clear();
+                    }
                 }
                 else
                 {
-                    i=BlockEnds; // blokk vége megvan;
+                    i=BlockEnded; // blokk vége megvan;
                 }
 
                 break;            
             }
             default: break;
             }
-            if(i==BlockEnds) break; // megvan a vége, nem keresünk tovább
+            if(i==BlockEnded) break; // megvan a vége, nem keresünk tovább
         }
         r.ix++;
     }
@@ -170,60 +180,69 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
     return r;
 }
 
+Work1::Field Work1::Field::Parse(const QString &line)
+{
+    Field f;
+    f.name=line.trimmed();
+    zInfo("f:"+line);
+    return f;
+}
 
 /*
  * https://en.cppreference.com/w/c/language/struct
 */
-Work1::Struct Work1::Struct::Parse(const QString& name, const QString& txt)
-{    
-    Struct a;
-    FindFieldR r(ix);
-    bool ok=true;
-    if(name.isEmpty()) ok=false;
-    if(txt.isEmpty()) ok=false;
-    int L = txt.length();
-    StructFindStates i = NameBegins;
-    int level=0;
+//Work1::Struct Work1::Struct::Parse(const QString& name, const QString& txt)
+//{
+//    Struct a;
+//    FindFieldR r(5);
+//    bool ok=true;
+//    if(name.isEmpty()) ok=false;
+//    if(txt.isEmpty()) ok=false;
+//    int L = txt.length();
+//    StructFindStates i = NameBegins;
+//    int level=0;
 
-    if(ok)
-    {
-        zInfo("parse:"+name+":"+txt);
+//    if(ok)
+//    {
+//        zInfo("parse:"+name+":"+txt);
 
-        while(r.ix<L){
+////        while(r.ix<L){
 
-            int ix2 = SkipQuotation(txt, r.ix);
-            if(r.ix!=ix2) {r.ix = ix2;continue;}
+////            int ix2 = SkipQuotation(txt, r.ix);
+////            if(r.ix!=ix2) {r.ix = ix2;continue;}
 
-            // L" "
-            // u8" "
-            // u" "
-            // U" "
-            // R" ( ) "
+////            // L" "
+////            // u8" "
+////            // u" "
+////            // U" "
+////            // R" ( ) "
 
-            //
+////            //
 
-            auto& c = txt[r.ix];
+////            auto& c = txt[r.ix];
 
-                FindFieldR f = FindField(txt, r.ix);
-                if(r.ix!=f.ix)
-                {
-                    r.ix=f.ix;
-                    Struct::Field s = Struct::Field::Parse(f.name, f.type);
-                }
+//////                FindFieldR f = FindField(txt, r.ix);
+//////                if(r.ix!=f.ix)
+//////                {
+//////                    r.ix=f.ix;
+//////                    Struct::Field s = Struct::Field::Parse(f.name, f.type);
+//////                }
 
-            //Struct s = Struct::Parse(txt);
-            r.ix++;
-        }
-    }
-    return a;
-}
+////            //Struct s = Struct::Parse(txt);
+////            r.ix++;
+////        }
+//    }
+//    return a;
+//}
 
 Work1::FindStructR::FindStructR(int _ix)
 {
     ix = _ix;
 }
 
-Work1::FindFieldR::FindFieldR(int _ix)
-{
-    ix = _ix;
-}
+//Work1::FindFieldR::FindFieldR(int _ix)
+//{
+//    ix = _ix;
+//}
+
+
