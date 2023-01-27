@@ -41,6 +41,8 @@ auto Work1::doWork(Params params) -> Result
     while(ix<L){
         int ix2 = SkipQuotation(txt, ix);
         if(ix!=ix2) {ix = ix2;continue;}      
+        ix2 = SkipComment(txt, ix);
+        if(ix!=ix2) {ix = ix2;continue;}
 
         auto& c = txt[ix];
         if(c=='s')
@@ -63,17 +65,59 @@ auto Work1::doWork(Params params) -> Result
 // u8" "
 // u" "
 // U" "
-// R" ( ) "
+// R"( )"
 
 int Work1::SkipQuotation(const QString &txt, int ix)
 {
+    QuotationType t;
     auto& c = txt[ix];
-    if(c!='\"') return ix;
-    int i = txt.indexOf('"', ix+1);
-    if(i==-1) return ix;
-    //int L = i-ix+1;
-    //zInfo(L("q:")+txt.mid(ix, L));
-    return i+1;// a találat mögötti, mivel átugrottuk
+    if(c=='"')
+    {
+        auto& c1 = txt[ix-1];
+        if(c1=='L'){
+            t = L;
+        } else if(c1=='u'){
+            t=u;
+        } else if(c1=='U'){
+            t=U;
+        } else if(c1=='R'){
+            auto& c2 = txt[ix+1];
+            if(c2=='('){
+                t=Raw;
+            } else{
+                t=QNone;
+            }
+        } else if(c1=='8'){
+            auto& c2 = txt[ix-2];
+            if(c2=='u'){
+                t = u8;
+            } else {
+                t = QNone;
+            }
+        } else {
+        t = QNone;
+        }
+    } else{
+        t = QNone;
+    }
+
+    switch(t){
+    case L:
+    case u8:
+    case u:
+    case U:
+    case Simple:{
+        int i = txt.indexOf('"', ix+1);
+        if(i==-1) return ix;
+        return i+1;
+    }
+    case Raw:{
+        int i = txt.indexOf(")\"", ix+1);
+        if(i==-1) return ix;
+        return i+2;
+    }
+    case QNone: return ix;
+    }
 }
 
 int Work1::SkipBlock(const QString &txt, int ix2)
@@ -102,6 +146,13 @@ int Work1::SkipBlock(const QString &txt, int ix2)
                 ix=ix2;
                 continue;
             }
+            ix2 = SkipComment(txt, ix);
+            if(ix!=ix2)
+            {
+                QString v = txt.mid(ix, ix2-ix);
+                ix=ix2;
+                continue;
+            }
         }
         ix++;
     }
@@ -109,6 +160,41 @@ int Work1::SkipBlock(const QString &txt, int ix2)
     //zInfo(L("b:")+txt.mid(ix2, L2));
     return ix+1; // a találat mögötti, mivel átugrottuk
 }
+
+
+int Work1::SkipComment(const QString &txt, int ix)
+{
+    CommentType t;
+    auto& c0 = txt[ix];
+
+    if(c0=='/'){
+        auto& c1 = txt[ix+1];
+        if(c1=='/') {
+            t = Line;
+        } else if(c1=='*'){
+            t = MultiLine;
+        } else {
+            t=None;
+        }
+    } else {
+        t=None;
+    }
+
+    switch(t){
+    case Line:{
+        int i = txt.indexOf('\n', ix+2);
+        if(i==-1) return ix;
+        return i+1;// a találat mögötti, mivel átugrottuk
+    }
+    case MultiLine:{
+        int i = txt.indexOf("*/", ix+2);
+        if(i==-1) return ix;
+        return i+1;// a találat mögötti, mivel átugrottuk
+    }
+    case None: return ix;
+    }
+}
+
 
 Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 {
@@ -124,8 +210,8 @@ Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
     while(r.ix<L)
     {
         auto& c = txt[r.ix];
-        //int ix2 = SkipQuotation(txt, r.ix);
-        //if(r.ix!=ix2) {r.ix = ix2;continue;}
+//        int ix2 = SkipComment(txt, r.ix);
+//        if(r.ix!=ix2) {r.ix = ix2;continue;}
         if(c.isSpace())
         {
             switch(i)
@@ -265,7 +351,7 @@ QList<Work1::Field> Work1::Field::Parse(const QString &line)
                     }
                     else
                     {
-                        i=FieldEnded; //nincs field;
+                        i=FieldError; //nincs field;
                     }
                     break;
                 }

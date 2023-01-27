@@ -40,19 +40,22 @@ public:
                                FieldEnded,
                              FieldError};
 
+    enum CommentType:int {Line=0,MultiLine, None};
+    enum QuotationType:int {Simple=0,L,u8,u,U,Raw, QNone};
+
     Result doWork(Params params);
 
     static int SkipQuotation(const QString& txt, int ix);
     static int SkipBlock(const QString& txt, int ix);
+    static int SkipComment(const QString& txt, int ix);
 
 
-
-//    struct FindFieldR{
-//        FindFieldR(int _ix);
-//        int ix;
-//        QString type;
-//        QString name;
-//    };
+    struct FindFieldR{
+        FindFieldR(int _ix);
+        int ix;
+        QString type;
+        QString name= R"(2222 )";
+    };
 
 
     struct T1{

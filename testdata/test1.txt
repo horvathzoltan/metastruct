@@ -9,12 +9,15 @@ namespace Model
 {
     QString a = "aaaa struct bbb"
     struct ccc; {grrrvavva}
-    struct bbb ; {uu}
-    struct aaa { valami {} {}  {}  u};
+    //struct bbb ; {uu}
+    struct aaa { valami {} {}  {}  u};    
+    /*struct ddd1; {uu}
+    struct ddd2; {uu}
+    struct ddd3; {uu}*/
     struct Device{  
         QString address = "a,bc", v2 = {"aaa"};
-        bool connected = false;
-        QString name = "def";
+        // bool connected = false;
+        QString name = R"(def)";
         QString abcg("hutty"), u="sss";
         QString name="a", b="u";
         int i,j,k = 88;
