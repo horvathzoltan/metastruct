@@ -82,6 +82,7 @@ public:
         QList<Field> fields;
 
         QString ToString();
+        QString ToMetaString();
     };
 
     struct FindStructR{

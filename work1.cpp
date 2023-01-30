@@ -526,3 +526,25 @@ QString Work1::Struct::ToString()
     }
     return s+"{\n"+fs+"}\n";
 }
+
+QString Work1::Struct::ToMetaString(){
+    QString fullName = "Model::InsoleType";
+    QString a = QStringLiteral(R"(#define META_1(m, r) Meta<%1> m(&r); \)");
+
+    QString macro = a.arg(fullName);
+    return macro;
+}
+/*
+#define META_1(m, r) Meta<Model::InsoleType> m(&r); \
+(m).AddRow(int,&(r).Id); \
+(m).AddRow(QDateTime,&(r).LastModified); \
+(m).AddRow(QString,&(r).Name); \
+(m).AddRow(int,&(r).InsoleGenderId); \
+(m).AddRow(int,&(r).InsoleAgeCategoryId); \
+(m).AddRow(int,&(r).InsoleSideId); \
+(m).AddRow(qreal,&(r).EUSize); \
+(m).AddRow(QString,&(r).GeometryCSV); \
+(m).AddRow(int,&(r).R); \
+(m).AddRow(int,&(r).VMax); \
+(m).AddRow(int,&(r).VMin);
+*/
