@@ -51,7 +51,10 @@ auto Work1::doWork(Params params) -> Result
             if(ix!=r.ix)
             {
                 ix=r.ix;
-                QString a = r._struct.ToString();
+                //QString a = r._struct.ToString();
+                //zInfo(a);
+
+                QString a = r._struct.ToMetaString();
                 zInfo(a);
             }
         }
@@ -529,9 +532,15 @@ QString Work1::Struct::ToString()
 
 QString Work1::Struct::ToMetaString(){
     QString fullName = "Model::InsoleType";
-    QString a = QStringLiteral(R"(#define META_1(m, r) Meta<%1> m(&r); \)");
+    QString a0 = QStringLiteral(R"(#define META_1(m, r) Meta<%1> m(&r);)"); //head
+    QString a1 = QStringLiteral(R"((m).AddRow(%1,&(r).%2);)"); // row
 
-    QString macro = a.arg(fullName);
+    QString macro = a0.arg(fullName);
+    for(auto&field:fields)
+    {
+        if(!macro.isEmpty()) macro+=QStringLiteral(" \\\n");
+        macro += a1.arg(field.type,field.name);
+    }
     return macro;
 }
 /*
