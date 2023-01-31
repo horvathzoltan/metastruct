@@ -38,6 +38,8 @@ auto Work1::doWork(Params params) -> Result
     int ix =0;
     int L = txt.length();
 
+    Blocks blocks;
+
     while(ix<L){
         int ix2 = SkipQuotation(txt, ix);
         if(ix!=ix2) {ix = ix2;continue;}      
@@ -51,12 +53,33 @@ auto Work1::doWork(Params params) -> Result
             if(ix!=r.ix)
             {
                 ix=r.ix;
-                //QString a = r._struct.ToString();
-                //zInfo(a);
 
-                QString a = r._struct.ToMetaString();
+                QString blocknames = blocks.ToString();
+                QString a = r._struct.ToMetaString(blocknames);
                 zInfo(a);
             }
+        }
+        else if(c=='n')
+        {
+            FindNamespaceR r = FindNamespace(txt, ix);
+            if(ix!=r.ix)
+            {
+                blocks.Add(Blocks::Type::Namespace, r._namespace);
+            }
+        }
+        else if(c=='c')
+        {
+            FindClassR r = FindClass(txt, ix);
+            if(ix!=r.ix)
+            {
+                blocks.Add(Blocks::Type::Class, r._class);
+            }
+        }
+        else if(c=='{'){
+            blocks.In();
+        }
+        else if(c=='}'){
+            blocks.Out();
         }
         ix++;
     }
@@ -198,10 +221,153 @@ int Work1::SkipComment(const QString &txt, int ix)
     }
 }
 
+Work1::FindNamespaceR Work1::FindNamespace(const QString &txt, int ix2)
+{
+    QString k = QStringLiteral("namespace");
+    auto ok = txt.mid(ix2,k.length())==k;
+
+    FindNamespaceR r(ix2);
+
+    if(!ok) return r;
+    int L = txt.length();
+    StructFindStates i = StructStarted;
+    int level=0;
+    QString line;
+
+    while(r.ix<L)
+    {
+        auto& c = txt[r.ix];
+
+        if(c.isSpace())
+        {
+            switch(i)
+            {
+            case StructStarted: i=NameStarted; break;//name következik
+            case NameStarted: i=NameEnded; break;//name kész, blokk következik
+            //case BlockStarted: line+=c;break;// blokk belsejében szóköz
+            default: break;
+            }
+        }
+        else
+        {
+            switch(i)
+            {
+            case NameStarted:
+            {
+                if(c==';')
+                {
+                    i=BlockEnded; //nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    i=BlockStarted; // a név blokkal végződik
+                    level++;
+                }
+                else
+                {
+                    r._namespace+=c; //name++
+                }
+                break;
+            }
+            case NameEnded: // blokk következik;
+            {
+                if(c==';')
+                {
+                    if(level==0) i=BlockEnded; //lezárva és nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    level++;
+                    i=BlockStarted;
+                }
+                break;
+            }
+
+            default: break;
+            }
+            if(i==BlockStarted) break; // megvan a vége, nem keresünk tovább
+        }
+        r.ix++;
+    }
+    return r;
+}
+
+Work1::FindClassR Work1::FindClass(const QString &txt, int ix2)
+{
+    QString k = QStringLiteral("class");
+    auto ok = txt.mid(ix2,k.length())==k;
+
+    FindClassR r(ix2);
+
+    if(!ok) return r;
+    int L = txt.length();
+    StructFindStates i = StructStarted;
+    int level=0;
+    QString line;
+
+    while(r.ix<L)
+    {
+        auto& c = txt[r.ix];
+
+        if(c.isSpace())
+        {
+            switch(i)
+            {
+            case StructStarted: i=NameStarted; break;//name következik
+            case NameStarted: i=NameEnded; break;//name kész, blokk következik
+            //case BlockStarted: line+=c;break;// blokk belsejében szóköz
+            default: break;
+            }
+        }
+        else
+        {
+            switch(i)
+            {
+            case NameStarted:
+            {
+                if(c==';')
+                {
+                    i=BlockEnded; //nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    i=BlockStarted; // a név blokkal végződik
+                    level++;
+                }
+                else
+                {
+                    r._class+=c; //name++
+                }
+                break;
+            }
+            case NameEnded: // blokk következik;
+            {
+                if(c==';')
+                {
+                    if(level==0) i=BlockEnded; //lezárva és nincs blokk;
+                }
+                else if(c=='{')
+                {
+                    level++;
+                    i=BlockStarted;
+                }
+                break;
+            }
+
+            default: break;
+            }
+            if(i==BlockStarted) break; // megvan a vége, nem keresünk tovább
+        }
+        r.ix++;
+    }
+    return r;
+}
 
 Work1::FindStructR Work1::FindStruct(const QString &txt, int ix2)
 {
-    auto ok = txt.mid(ix2,6)==("struct");
+    QString k = QStringLiteral("struct");
+    auto ok = txt.mid(ix2,k.length())==k;
+
     FindStructR r(ix2);
 
     if(!ok) return r;
@@ -509,10 +675,10 @@ Work1::FindStructR::FindStructR(int _ix)
     ix = _ix;
 }
 
-//Work1::FindFieldR::FindFieldR(int _ix)
-//{
-//    ix = _ix;
-//}
+Work1::FindNamespaceR::FindNamespaceR(int _ix)
+{
+    ix = _ix;
+}
 
 
 
@@ -530,8 +696,9 @@ QString Work1::Struct::ToString()
     return s+"{\n"+fs+"}\n";
 }
 
-QString Work1::Struct::ToMetaString(){
-    QString fullName = "Model::InsoleType";
+QString Work1::Struct::ToMetaString(const QString& fqn){
+
+    QString fullName = fqn.isEmpty()?name:fqn+"::"+name; //"Model::InsoleType";
     QString a0 = QStringLiteral(R"(#define META_1(m, r) Meta<%1> m(&r);)"); //head
     QString a1 = QStringLiteral(R"((m).AddRow(%1,&(r).%2);)"); // row
 
@@ -557,3 +724,47 @@ QString Work1::Struct::ToMetaString(){
 (m).AddRow(int,&(r).VMax); \
 (m).AddRow(int,&(r).VMin);
 */
+
+
+void Work1::Blocks::Add(Type type, const QString &name)
+{
+    Block block(type,name);
+    blocks.append(block);
+}
+
+QString Work1::Blocks::ToString()
+{
+    QString b;
+    for(auto&block:blocks){
+        if(!b.isEmpty()) b+="::";
+        b+=block.name;
+    }
+    return b;
+}
+
+void Work1::Blocks::In()
+{
+    auto&b = blocks.last();
+    b.level++;
+}
+
+void Work1::Blocks::Out()
+{
+    auto&b = blocks.last();
+    b.level--;
+    if(b.level==0)
+    {
+        blocks.removeLast();
+    }
+}
+
+Work1::Blocks::Block::Block(Type _type, const QString &_name)
+{
+    type = _type;
+    name = _name;
+}
+
+Work1::FindClassR::FindClassR(int _ix)
+{
+    ix = _ix;
+}

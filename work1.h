@@ -82,7 +82,7 @@ public:
         QList<Field> fields;
 
         QString ToString();
-        QString ToMetaString();
+        QString ToMetaString(const QString& fqn);
     };
 
     struct FindStructR{
@@ -92,6 +92,42 @@ public:
     };
 
     static FindStructR FindStruct(const QString& txt, int ix);
+
+    struct FindNamespaceR{
+        FindNamespaceR(int _ix);
+        int ix;
+        QString _namespace;
+    };
+
+    class Blocks{
+public:
+        enum Type:int {Namespace, Class};
+private:
+        struct Block{
+            Block(Type _type, const QString& _name);
+            Type type;
+            QString name;
+            int level;
+        };
+private:
+        QList<Block> blocks;
+public:
+
+        void Add(Type type, const QString& name);
+        QString ToString();
+        void In();
+        void Out();
+    };
+
+    static FindNamespaceR FindNamespace(const QString& txt, int ix);
+
+    struct FindClassR{
+        FindClassR(int _ix);
+        int ix;
+        QString _class;
+    };
+
+    static FindClassR FindClass(const QString& txt, int ix);
 };
 
 #endif // WORK1_H
