@@ -1,0 +1,24 @@
+#define META_Model_InsoleType(m, k) k r; \
+Meta<k> m(&r); \
+m.AddRow(int,&r.Id); \
+m.AddRow(QDateTime,&r.LastModified); \
+m.AddRow(QString,&r.Name); \
+m.AddRow(int,&r.InsoleGenderId); \
+m.AddRow(int,&r.InsoleAgeCategoryId); \
+m.AddRow(int,&r.InsoleSideId); \
+m.AddRow(qreal,&r.EUSize); \
+m.AddRow(QString,&r.GeometryCSV); \
+m.AddRow(int,&r.R); \
+m.AddRow(int,&r.VMax); \
+m.AddRow(int,&r.VMin);
+
+Meta<Model::InsoleType> Model::InsoleType::GetMeta()
+{
+
+#ifdef META_Model_InsoleType
+    META_Model_InsoleType(model, Model::InsoleType)
+    return model;
+#else
+    zInfo("META_Model_InsoleType not defined");
+#endif
+}

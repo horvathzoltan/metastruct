@@ -54,7 +54,7 @@ auto Work1::doWork(Params params) -> Result
             {
                 ix=r.ix;
 
-                QString blocknames = blocks.ToString();
+                QString blocknames = blocks.ToString("_");
                 QString a = r._struct.ToMetaString(blocknames);
                 zInfo(a);
             }
@@ -698,11 +698,12 @@ QString Work1::Struct::ToString()
 
 QString Work1::Struct::ToMetaString(const QString& fqn){
 
-    QString fullName = fqn.isEmpty()?name:fqn+"::"+name; //"Model::InsoleType";
-    QString a0 = QStringLiteral(R"(#define META_1(m, r) Meta<%1> m(&r);)"); //head
-    QString a1 = QStringLiteral(R"((m).AddRow(%1,&(r).%2);)"); // row
+    QString fullName = fqn.isEmpty()?name:fqn+"_"+name;
+    QString a00 = QStringLiteral(R"(#define META_%1(m, k) k r; \)"); //head1
+    QString a01 = QStringLiteral(R"(Meta<k> m(&r); \)"); //head2
+    QString a1 = QStringLiteral(R"(m.AddRow(%1,&r.%2);)"); // row
 
-    QString macro = a0.arg(fullName);
+    QString macro = a00.arg(fullName)+"\n"+a01;
     for(auto&field:fields)
     {
         if(!macro.isEmpty()) macro+=QStringLiteral(" \\\n");
@@ -710,20 +711,6 @@ QString Work1::Struct::ToMetaString(const QString& fqn){
     }
     return macro;
 }
-/*
-#define META_1(m, r) Meta<Model::InsoleType> m(&r); \
-(m).AddRow(int,&(r).Id); \
-(m).AddRow(QDateTime,&(r).LastModified); \
-(m).AddRow(QString,&(r).Name); \
-(m).AddRow(int,&(r).InsoleGenderId); \
-(m).AddRow(int,&(r).InsoleAgeCategoryId); \
-(m).AddRow(int,&(r).InsoleSideId); \
-(m).AddRow(qreal,&(r).EUSize); \
-(m).AddRow(QString,&(r).GeometryCSV); \
-(m).AddRow(int,&(r).R); \
-(m).AddRow(int,&(r).VMax); \
-(m).AddRow(int,&(r).VMin);
-*/
 
 
 void Work1::Blocks::Add(Type type, const QString &name)
@@ -732,11 +719,11 @@ void Work1::Blocks::Add(Type type, const QString &name)
     blocks.append(block);
 }
 
-QString Work1::Blocks::ToString()
+QString Work1::Blocks::ToString(const QString& separator)
 {
     QString b;
     for(auto&block:blocks){
-        if(!b.isEmpty()) b+="::";
+        if(!b.isEmpty()) b+=separator;
         b+=block.name;
     }
     return b;

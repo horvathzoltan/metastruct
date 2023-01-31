@@ -114,7 +114,7 @@ private:
 public:
 
         void Add(Type type, const QString& name);
-        QString ToString();
+        QString ToString(const QString& separator);
         void In();
         void Out();
     };
