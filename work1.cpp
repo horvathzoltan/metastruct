@@ -699,11 +699,12 @@ QString Work1::Struct::ToString()
 QString Work1::Struct::ToMetaString(const QString& fqn){
 
     QString fullName = fqn.isEmpty()?name:fqn+"_"+name;
-    QString a00 = QStringLiteral(R"(#define META_%1(m, k) k r; \)"); //head1
-    QString a01 = QStringLiteral(R"(Meta<k> m(&r); \)"); //head2
+    QString fullName2 = fqn.isEmpty()?name:fqn+"::"+name;
+    QString a00 = QStringLiteral(R"(#define META_%1(m) %2 r; \)"); //head1
+    QString a01 = QStringLiteral(R"(Meta<%1> m(&r); \)"); //head2
     QString a1 = QStringLiteral(R"(m.AddRow(%1,&r.%2);)"); // row
 
-    QString macro = a00.arg(fullName)+"\n"+a01;
+    QString macro = a00.arg(fullName, fullName2)+"\n"+a01.arg(fullName2);
     for(auto&field:fields)
     {
         if(!macro.isEmpty()) macro+=QStringLiteral(" \\\n");
