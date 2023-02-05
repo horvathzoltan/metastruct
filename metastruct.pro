@@ -110,8 +110,7 @@ HEADERS += \
     helpers/filenamehelper.h \
     logger.h \
     nameof.h \
-    signalhelper.h \
-    testdata/test1.txt \
+    signalhelper.h \    
     work1.h
 
 message(includepath = $$INCLUDEPATH)
@@ -126,4 +125,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 #    signalhelper.h
 
 DISTFILES += \
-    testdata/notes.txt
+    testdata/notes.txt \
+    testdata/test1.h \
+    testdata/test2.h

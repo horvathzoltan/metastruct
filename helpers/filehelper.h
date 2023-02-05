@@ -9,7 +9,8 @@
 class FileHelper
 {
 public:
-    static QString load2(const QString &filename);
+    static QString Load(const QString &filename);
+    static bool Save(const QString& txt, const QString& fn, bool isAppend);
 };
 
 #endif // FILEHELPER_H

@@ -31,9 +31,35 @@ auto Work1::doWork(Params params) -> Result
     QString testFilePathName = FileNameHelper::GetTestFolderPath();
 
     QDir testFilePath(testFilePathName);
-    QString testFileFullPathName = testFilePath.filePath("test1.txt");
 
-    QString txt = FileHelper::load2(testFileFullPathName);
+    QStringList files = testFilePath.entryList({"*.h"},QDir::Files);
+
+    for(auto&file:files)
+    {
+        QString ffn = testFilePath.filePath(file);
+        QString txt = FileHelper::Load(ffn);
+
+        QString txt_out = ProcessFile(txt);
+        if(!txt.isEmpty()){
+            QFileInfo fi(file);
+            QString fileName2 = fi.completeBaseName()+"_meta."+fi.completeSuffix();
+            zInfo(file+"\n"+txt_out);
+            QString ffn2 = testFilePath.filePath(fileName2);
+            FileHelper::Save(txt_out, ffn2, false);
+        }
+    }
+    //QString testFileFullPathName = testFilePath.filePath("test1.txt");
+
+    //if(testFileFullPathName.isEmpty()) return {};
+
+    return {Result::State::Ok, 55};
+}
+
+QString Work1::ProcessFile(const QString& txt)
+{
+    if(txt.isEmpty()) return {};
+
+    QString out_txt;
 
     int ix =0;
     int L = txt.length();
@@ -42,7 +68,7 @@ auto Work1::doWork(Params params) -> Result
 
     while(ix<L){
         int ix2 = SkipQuotation(txt, ix);
-        if(ix!=ix2) {ix = ix2;continue;}      
+        if(ix!=ix2) {ix = ix2;continue;}
         ix2 = SkipComment(txt, ix);
         if(ix!=ix2) {ix = ix2;continue;}
 
@@ -56,7 +82,9 @@ auto Work1::doWork(Params params) -> Result
 
                 QString blocknames = blocks.ToString("_");
                 QString a = r._struct.ToMetaString(blocknames);
-                zInfo(a);
+                //zInfo(a);
+                if(!out_txt.isEmpty()) out_txt+='\n';
+                out_txt+=a;
             }
         }
         else if(c=='n')
@@ -83,8 +111,7 @@ auto Work1::doWork(Params params) -> Result
         }
         ix++;
     }
-
-    return {Result::State::Ok, 55};
+    return out_txt;
 }
 
 // L" "

@@ -128,6 +128,8 @@ public:
     };
 
     static FindClassR FindClass(const QString& txt, int ix);
+
+    static QString ProcessFile(const QString& fileName);
 };
 
 #endif // WORK1_H
