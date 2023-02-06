@@ -27,7 +27,6 @@ auto Work1::Result::ToString() -> QString
 
 auto Work1::doWork(Params params) -> Result
 {    
-    zInfo("hutty");
     QString testFilePathName = FileNameHelper::GetTestFolderPath();
 
     QDir testFilePath(testFilePathName);
@@ -38,20 +37,19 @@ auto Work1::doWork(Params params) -> Result
     {
         QString ffn = testFilePath.filePath(file);
         QString txt = FileHelper::Load(ffn);
+        QFileInfo fi(file);
+        QString fileName2 = fi.completeBaseName();
+        if(fileName2.endsWith("_meta")) continue;
 
         QString txt_out = ProcessFile(txt);
-        if(!txt.isEmpty()){
-            QFileInfo fi(file);
-            QString fileName2 = fi.completeBaseName()+"_meta."+fi.completeSuffix();
-            zInfo(file+"\n"+txt_out);
+        if(!txt.isEmpty())
+        {
+            fileName2 += "_meta."+fi.completeSuffix();
+            zInfo("meta: "+fileName2);
             QString ffn2 = testFilePath.filePath(fileName2);
             FileHelper::Save(txt_out, ffn2, false);
         }
     }
-    //QString testFileFullPathName = testFilePath.filePath("test1.txt");
-
-    //if(testFileFullPathName.isEmpty()) return {};
-
     return {Result::State::Ok, 55};
 }
 
