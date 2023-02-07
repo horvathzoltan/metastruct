@@ -1,5 +1,6 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QDebug>
 #include "logger.h"
 #include "signalhelper.h"
 #include "commandlineparserhelper.h"
@@ -10,6 +11,7 @@
 
 auto main(int argc, char *argv[]) -> int
 {
+    qDebug()<<"indul";
     Logger::Init(Logger::ErrLevel::INFO, Logger::DbgLevel::TRACE, true, true);
 
     SignalHelper::setShutDownSignal(SignalHelper::SIGINT_); // shut down on ctrl-c

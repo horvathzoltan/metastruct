@@ -40,10 +40,12 @@ auto Work1::doWork(Params params) -> Result
         QString txt = FileHelper::Load(ffn);
         QFileInfo fi(file);
         QString fileName2 = fi.completeBaseName();
-        if(fileName2.endsWith("_meta")) continue;
+        if(fileName2.endsWith("_meta")){
+            QFile::remove(file);
+        }
 
         QString txt_out = ProcessFile(txt);
-        if(!txt.isEmpty())
+        if(!txt_out.isEmpty())
         {
             fileName2 += "_meta."+fi.completeSuffix();
             zInfo("meta: "+fileName2);
@@ -51,7 +53,7 @@ auto Work1::doWork(Params params) -> Result
             FileHelper::Save(txt_out, ffn2, false);
         }
     }
-    return {Result::State::Ok, 55};
+    return {Result::State::Ok, 0};
 }
 
 QString Work1::ProcessFile(const QString& txt)
@@ -78,12 +80,14 @@ QString Work1::ProcessFile(const QString& txt)
             if(ix!=r.ix)
             {
                 ix=r.ix;
-
-                QString blocknames = blocks.ToString("_");
-                QString a = r._struct.ToMetaString(blocknames);
-                //zInfo(a);
-                if(!out_txt.isEmpty()) out_txt+='\n';
-                out_txt+=a;
+                if(r._struct.name.endsWith("_Model"))
+                {
+                    QString blocknames = blocks.ToString("_");
+                    QString a = r._struct.ToMetaString(blocknames);
+                    //zInfo(a);
+                    if(!out_txt.isEmpty()) out_txt+='\n';
+                    out_txt+=a;
+                }
             }
         }
         else if(c=='n')
