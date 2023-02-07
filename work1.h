@@ -69,6 +69,7 @@ public:
     };
 
     struct Field{
+        QStringList keywords;
         QString type;
         QString name;
         QString value;
@@ -83,6 +84,7 @@ public:
 
         QString ToString();
         QString ToMetaString(const QString& fqn);
+        bool isMeta();
     };
 
     struct FindStructR{

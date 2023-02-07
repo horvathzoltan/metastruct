@@ -8,7 +8,7 @@
 namespace Model
 {
 namespace Mogyoro
-{
+{    
     QString a = "aaaa struct bbb"
     struct ccc; {grrrvavva}
     //struct bbb ; {uu}
@@ -16,7 +16,8 @@ namespace Mogyoro
     /*struct ddd1; {uu}
     struct ddd2; {uu}
     struct ddd3; {uu}*/
-    struct Device{  
+    struct Device{
+        META
         QString address = "a,bc", v2 = {"aaa"};
         // bool connected = false;
         QString name = R"(def)";
@@ -28,24 +29,5 @@ namespace Mogyoro
 
 };
 
-struct InsoleType{
-    static const QString CSV;
-    static const QString CSV_header;
-    int Id;
-    QDateTime LastModified;
-    QString Name;
-    int InsoleGenderId;
-    int InsoleAgeCategoryId;
-    int InsoleSideId;
-    qreal EUSize;
-    QString GeometryCSV;
-    int R;
-    int VMax;
-    int VMin;
-
-    static QList<InsoleType> ParseList(const QString& str);
-    static InsoleType Parse(const QString& str);
-    static Meta<Model::InsoleType> GetMeta();
-};
 };
 #endif // MODELS_H

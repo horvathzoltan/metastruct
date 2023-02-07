@@ -16,6 +16,7 @@ namespace Model
     };
 
     struct InsoleType{
+        META
         static const QString CSV;
         static const QString CSV_header;
         int Id;
@@ -30,9 +31,9 @@ namespace Model
         int VMax;
         int VMin;
 
-        static QList<InsoleType> ParseList(const QString& str);
-        static InsoleType Parse(const QString& str);
-        static Meta<Model::InsoleType> GetMeta();
+        static QList<InsoleType_Model> ParseList(const QString& str);
+        InsoleType_Model Parse("kani");
+        static Meta<Model::InsoleType_Model> GetMeta();
     };
 };
 

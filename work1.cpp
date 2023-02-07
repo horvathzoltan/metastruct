@@ -80,13 +80,16 @@ QString Work1::ProcessFile(const QString& txt)
             if(ix!=r.ix)
             {
                 ix=r.ix;
-                if(r._struct.name.endsWith("_Model"))
+                if(r._struct.isMeta())
                 {
                     QString blocknames = blocks.ToString("_");
                     QString a = r._struct.ToMetaString(blocknames);
+                    if(!a.isEmpty())
+                    {
                     //zInfo(a);
-                    if(!out_txt.isEmpty()) out_txt+='\n';
-                    out_txt+=a;
+                        if(!out_txt.isEmpty()) out_txt+='\n';
+                        out_txt+=a;
+                    }
                 }
             }
         }
@@ -151,7 +154,7 @@ int Work1::SkipQuotation(const QString &txt, int ix)
                 t = QNone;
             }
         } else {
-        t = QNone;
+        t = Simple;
         }
     } else{
         t = QNone;
@@ -513,20 +516,50 @@ QList<Work1::Field> Work1::Field::Parse(const QString &line)
         {
             switch(i)
             {
-            case FTypeStarted: i=FTypeEnded; break;// type kész
-            case FNameStarted: i=FNameEnded; break;// name kész
+            case FTypeStarted:
+            {
+                if(f.type=="static" ||
+                        f.type=="const"){
+                    f.keywords.append(f.type);
+                    f.type.clear();
+                }
+                else if(f.type=="META")
+                {
+                    f.keywords.append(f.type);
+                    f.type.clear();
+                    fields.append(f);
+                    i=FieldStarted;
+                    f.keywords.clear();
+                }
+                else
+                {
+                    i=FTypeEnded;
+                }
+                    break;// name kész
+            }// i=FTypeEnded; break;// type kész
+            case FNameStarted: i=FNameEnded; break;
             //case FValueStarted: i=FValueEnded; break;// name kész
             default: break;
             }
         }
         else
         {
+            //            if(c=='\n')
+            //            {
+            //                if(i!=FieldError)
+            //                    fields.append(f);
+            //                f.name.clear();
+            //                f.value.clear();
+            //                i=FieldEnded; //nincs field;
+            //            }
             if(c==';')
             {
                 if(i!=FieldError)
                     fields.append(f);
                 f.name.clear();
                 f.value.clear();
+                f.keywords.clear();
+                //f.type.clear();
                 i=FieldEnded; //nincs field;
             }
             if(c==',')
@@ -564,7 +597,7 @@ QList<Work1::Field> Work1::Field::Parse(const QString &line)
                     if(c.isLetter())
                     {
                         i = FNameStarted;
-                        f.name+=c; //type++
+                        f.name+=c; //type++                                                
                     }
                     break;
                 }
@@ -737,10 +770,19 @@ QString Work1::Struct::ToMetaString(const QString& fqn){
     QString macro = a00.arg(fullName, fullName2)+"\n"+a01.arg(fullName2);
     for(auto&field:fields)
     {
+        if(field.keywords.contains("static")) continue;
+        if(field.keywords.contains("const")) continue;
+        if(field.keywords.contains("META")) continue;
         if(!macro.isEmpty()) macro+=QStringLiteral(" \\\n");
         macro += a1.arg(field.type,field.name);
     }
     return macro;
+}
+
+bool Work1::Struct::isMeta()
+{
+    if(fields.isEmpty()) return false;
+    return fields.first().keywords.contains("META");
 }
 
 
