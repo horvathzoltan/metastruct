@@ -5,6 +5,9 @@
 #include "commandlineparserhelper.h"
 #include "work1.h"
 
+// -i %{sourceDir}
+// https://github.com/qt-creator/qt-creator/blob/master/src/plugins/projectexplorer/projectexplorerconstants.h
+
 auto main(int argc, char *argv[]) -> int
 {
     Logger::Init(Logger::ErrLevel::INFO, Logger::DbgLevel::TRACE, true, true);

@@ -27,9 +27,10 @@ auto Work1::Result::ToString() -> QString
 
 auto Work1::doWork(Params params) -> Result
 {    
-    QString testFilePathName = FileNameHelper::GetTestFolderPath();
+    QString testFilePathName = params.inFile.isEmpty()?FileNameHelper::GetTestFolderPath():params.inFile;
 
     QDir testFilePath(testFilePathName);
+    if(! testFilePath.exists()) return {Result::State::NoResult, 1};
 
     QStringList files = testFilePath.entryList({"*.h"},QDir::Files);
 
