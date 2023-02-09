@@ -1,3 +1,6 @@
+// todo 01a01 file összehasonlítása: QString - filename - md5
+// todo 02a01
+
 #define META_Model_InsoleType(m) Model::InsoleType r; \
 Meta<Model::InsoleType> m(&r); \
 m.AddRow(int,&r.Id); \
