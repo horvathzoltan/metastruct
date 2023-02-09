@@ -17,8 +17,8 @@ namespace Mogyoro
     struct ddd2; {uu}
     struct ddd3; {uu}*/
     struct Device{
-        META
-        QString address = "a,bc", v2 = {"aaa"};
+
+        QString addreqss = "a,bc", v2 = {"aaa"};
         // bool connected = false;
         QString name = R"(def)";
         QString abcg("hutty"), u="sss";

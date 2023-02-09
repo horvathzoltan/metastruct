@@ -49,3 +49,4 @@ bool FileHelper::Save(const QString& txt, const QString& fn, bool isAppend) {
     f.close();
     return true;
 }
+

@@ -3,6 +3,7 @@
 #include "nameof.h"
 #include "helpers/filehelper.h"
 #include "helpers/filenamehelper.h"
+#include "helpers/hashhelper.h"
 
 Work1::Params::Params(const QString& _inFile, const QString& _outFile){
     inFile = _inFile;
@@ -33,25 +34,45 @@ auto Work1::doWork(Params params) -> Result
     if(! testFilePath.exists()) return {Result::State::NoResult, 1};
 
     QStringList files = testFilePath.entryList({"*.h"},QDir::Files);
-
-    for(auto&file:files)
-    {
-        QString ffn = testFilePath.filePath(file);
-        QString txt = FileHelper::Load(ffn);
+    QSet<QString> metaFileNames;
+    QSet<QString> hFileNames;
+    for(auto&file:files){
         QFileInfo fi(file);
-        QString fileName2 = fi.completeBaseName();
-        if(fileName2.endsWith("_meta")){
-            QFile::remove(file);
+        if(fi.completeBaseName().endsWith("_meta"))
+        {
+            metaFileNames.insert(file);
+        }else{
+            hFileNames.insert(file);
         }
+    }
+    files.clear();
+    for(auto&hfile:hFileNames)
+    {
+        QFileInfo hfi(hfile);
+        QString metaFileName = hfi.completeBaseName()+"_meta."+hfi.completeSuffix();
+        QString metaFilePath = testFilePath.filePath(metaFileName);
+
+        zInfo("meta: "+metaFileName);
+
+        QString hfilePath = testFilePath.filePath(hfile);
+        QString txt = FileHelper::Load(hfilePath);
 
         QString txt_out = ProcessFile(txt);
         if(!txt_out.isEmpty())
         {
-            fileName2 += "_meta."+fi.completeSuffix();
-            zInfo("meta: "+fileName2);
-            QString ffn2 = testFilePath.filePath(fileName2);
-            FileHelper::Save(txt_out, ffn2, false);
+            metaFileNames.remove(metaFileName); // kezelve
+            QString metaFileHash = HashHelper::FileHash(metaFilePath);
+            QString metaTxtHash  = HashHelper::QStringHash(txt_out);
+            // ha a file változott felülírjuk
+            // ha változatlan, és az editorban nyitva van, akkor nem fogja detektálni változásként
+            if(metaFileHash!=metaTxtHash)
+                FileHelper::Save(txt_out, metaFilePath, false);
         }
+    }
+    // a nem kezelteket töröljük
+    for(auto&hfile:metaFileNames){
+        QString hfilePath = testFilePath.filePath(hfile);
+        QFile::remove(hfilePath);
     }
     return {Result::State::Ok, 0};
 }
@@ -828,3 +849,4 @@ Work1::FindClassR::FindClassR(int _ix)
 {
     ix = _ix;
 }
+

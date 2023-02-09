@@ -98,6 +98,7 @@ SOURCES += \
         coreappworker.cpp \
         helpers/filehelper.cpp \
         helpers/filenamehelper.cpp \
+        helpers/hashhelper.cpp \
         logger.cpp \
         main.cpp \
         signalhelper.cpp \
@@ -108,6 +109,7 @@ HEADERS += \
     coreappworker.h \
     helpers/filehelper.h \
     helpers/filenamehelper.h \
+    helpers/hashhelper.h \
     logger.h \
     nameof.h \
     signalhelper.h \    
